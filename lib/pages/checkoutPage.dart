@@ -1,0 +1,465 @@
+import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tokomakeup/models/cart_item.dart';
+import 'package:tokomakeup/models/notification_item.dart';
+import 'package:tokomakeup/pages/listPage.dart';
+
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
+
+class CheckoutPage extends StatefulWidget {
+  final String selectedCurrency;
+
+  const CheckoutPage({super.key, required this.selectedCurrency});
+
+  @override
+  State<CheckoutPage> createState() => _CheckoutPageState();
+}
+
+class _CheckoutPageState extends State<CheckoutPage> {
+  late Box<CartItem> cartBox;
+  String currentUser = '';
+  String selectedPaymentMethod = '';
+
+  bool isLocationConfirmed = false;
+
+  final Map<String, double> conversionRates = {
+    'EUR': 1.0,
+    'USD': 1.1,
+    'IDR': 17000.0,
+  };
+
+  final List<String> paymentMethods = ['Mandiri', 'BCA', 'Gopay', 'OVO'];
+
+  final LatLng defaultLocation = LatLng(-7.7819, 110.4150);
+  late LatLng pinnedLocation;
+  bool isLocationReady = false;
+  final MapController _mapController = MapController();
+
+  @override
+  void initState() {
+    super.initState();
+    cartBox = Hive.box<CartItem>('cart_box');
+    pinnedLocation = defaultLocation;
+    _loadCurrentUser();
+    _determinePosition();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      currentUser = prefs.getString('username') ?? '';
+    });
+  }
+
+  Future<void> _determinePosition() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Enable location services')),
+        );
+      }
+      return;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.deniedForever ||
+          permission == LocationPermission.denied) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location permission denied')),
+          );
+        }
+        return;
+      }
+    }
+
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.medium,
+      );
+      if (mounted) {
+        setState(() {
+          pinnedLocation = LatLng(position.latitude, position.longitude);
+          isLocationReady = true;
+          _mapController.move(pinnedLocation, 16);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error getting location: $e')));
+      }
+    }
+  }
+
+  String getConvertedPrice(String priceStr) {
+    double basePrice = double.tryParse(priceStr) ?? 0.0;
+    double converted = basePrice * conversionRates[widget.selectedCurrency]!;
+    String symbol =
+        widget.selectedCurrency == 'IDR'
+            ? 'Rp'
+            : widget.selectedCurrency == 'USD'
+            ? '\$'
+            : '€';
+    return '$symbol${converted.toStringAsFixed(widget.selectedCurrency == 'IDR' ? 0 : 2)}';
+  }
+
+  String getConvertedSubtotal(double subtotalEUR) {
+    double converted = subtotalEUR * conversionRates[widget.selectedCurrency]!;
+    String symbol =
+        widget.selectedCurrency == 'IDR'
+            ? 'Rp'
+            : widget.selectedCurrency == 'USD'
+            ? '\$'
+            : '€';
+    return '$symbol${converted.toStringAsFixed(widget.selectedCurrency == 'IDR' ? 0 : 2)}';
+  }
+
+  double calculateTotal(List<CartItem> items) {
+    double totalEUR = 0.0;
+    for (var item in items) {
+      double basePrice = double.tryParse(item.price) ?? 0.0;
+      totalEUR += basePrice * item.quantity;
+    }
+    return totalEUR * conversionRates[widget.selectedCurrency]!;
+  }
+
+  void performCheckout(List<String> keys, double total) async {
+    final notifBox = Hive.box<NotificationItem>('notifications');
+    final symbol =
+        widget.selectedCurrency == 'IDR'
+            ? 'Rp'
+            : widget.selectedCurrency == 'USD'
+            ? '\$'
+            : '€';
+    final message =
+        "You have successfully checked out with a total of $symbol${total.toStringAsFixed(widget.selectedCurrency == 'IDR' ? 0 : 2)}"
+        "\nShipping Location: ${pinnedLocation.latitude.toStringAsFixed(5)}, ${pinnedLocation.longitude.toStringAsFixed(5)}";
+
+    notifBox.add(
+      NotificationItem(
+        message: message,
+        timestamp: DateTime.now(),
+        paymentMethod: selectedPaymentMethod,
+      ),
+    );
+
+    for (var key in keys) {
+      cartBox.delete(key);
+    }
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Payment Successful! Check notification for payment recap.',
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const ListPage()),
+        (route) => false,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (currentUser.isEmpty) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    final cartKeys =
+        cartBox.keys
+            .where((key) => key.toString().startsWith(currentUser))
+            .toList();
+    final userCartItems =
+        cartKeys
+            .map((key) => MapEntry(key.toString(), cartBox.get(key)!))
+            .toList();
+
+    if (userCartItems.isEmpty) {
+      return const Scaffold(body: Center(child: Text('No item in cart.')));
+    }
+
+    final items = userCartItems.map((e) => e.value).toList();
+    final totalConverted = calculateTotal(items);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Checkout'),
+        backgroundColor: const Color.fromARGB(221, 246, 74, 148),
+      ),
+      body: SingleChildScrollView(
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.white, Color(0xFFE6E6FA)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Receipt',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.pinkAccent,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Ganti ListView.builder dengan Column + map
+                ...userCartItems.map((entry) {
+                  final item = entry.value;
+                  final subtotalEUR = double.parse(item.price) * item.quantity;
+
+                  return Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 4,
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    shadowColor: Colors.pinkAccent.withOpacity(0.3),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      title: Text(
+                        item.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 17,
+                          color: Colors.pinkAccent,
+                        ),
+                      ),
+                      subtitle: Text(
+                        '${getConvertedPrice(item.price)} x ${item.quantity} = ${getConvertedSubtotal(subtotalEUR)}',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Total:',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.pinkAccent,
+                      ),
+                    ),
+                    Text(
+                      widget.selectedCurrency == 'IDR'
+                          ? 'Rp${totalConverted.toStringAsFixed(0)}'
+                          : widget.selectedCurrency == 'USD'
+                          ? '\$${totalConverted.toStringAsFixed(2)}'
+                          : '€${totalConverted.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.pinkAccent,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 18),
+                // Payment Method (tetap sama)
+                Row(
+                  children: [
+                    const Text(
+                      'Payment Method:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.pink.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.pink.shade200),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value:
+                                  selectedPaymentMethod.isEmpty
+                                      ? null
+                                      : selectedPaymentMethod,
+                              hint: const Text('Choose'),
+                              items:
+                                  paymentMethods.map((method) {
+                                    return DropdownMenuItem<String>(
+                                      value: method,
+                                      child: Text(method),
+                                    );
+                                  }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedPaymentMethod = value ?? '';
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                // Peta (FlutterMap) tetap seperti semula
+                SizedBox(
+                  height: 200,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: FlutterMap(
+                      mapController: _mapController,
+                      options: MapOptions(
+                        center: pinnedLocation,
+                        zoom: 16,
+                        onTap: (tapPos, latLng) {
+                          setState(() {
+                            pinnedLocation = latLng;
+                            isLocationConfirmed = false;
+                          });
+                        },
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                          subdomains: ['a', 'b', 'c'],
+                          userAgentPackageName: 'com.example.tokomakeup',
+                        ),
+                        MarkerLayer(
+                          markers: [
+                            Marker(
+                              width: 40,
+                              height: 40,
+                              point: pinnedLocation,
+                              builder:
+                                  (ctx) => const Icon(
+                                    Icons.location_pin,
+                                    color: Colors.redAccent,
+                                    size: 40,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+                Text(
+                  'Shipping Location: ${pinnedLocation.latitude.toStringAsFixed(5)}, ${pinnedLocation.longitude.toStringAsFixed(5)}',
+                  style: const TextStyle(
+                    fontStyle: FontStyle.italic,
+                    color: Colors.black54,
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Checkbox(
+                      value: isLocationConfirmed,
+                      onChanged: (value) {
+                        setState(() {
+                          isLocationConfirmed = value ?? false;
+                        });
+                      },
+                      activeColor: Colors.pinkAccent,
+                    ),
+                    const Expanded(
+                      child: Text(
+                        'I have made sure the delivery location is correct',
+                        style: TextStyle(fontSize: 15),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                        (states) {
+                          if (states.contains(MaterialState.disabled)) {
+                            return Colors.pink.shade200;
+                          }
+                          return Colors.pinkAccent;
+                        },
+                      ),
+                      shape: MaterialStateProperty.all(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      elevation: MaterialStateProperty.resolveWith<double>(
+                        (states) =>
+                            states.contains(MaterialState.disabled) ? 0 : 6,
+                      ),
+                      shadowColor: MaterialStateProperty.all(
+                        Colors.pinkAccent.shade200,
+                      ),
+                    ),
+                    onPressed:
+                        (selectedPaymentMethod.isEmpty || !isLocationConfirmed)
+                            ? null
+                            : () => performCheckout(
+                              cartKeys.map((e) => e.toString()).toList(),
+                              totalConverted,
+                            ),
+                    child: const Text(
+                      'Checkout',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

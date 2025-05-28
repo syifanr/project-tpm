@@ -40,11 +40,15 @@ class ContentModel {
   });
 
   factory ContentModel.fromJson(Map<String, dynamic> json) {
-    var colorsList = (json['product_colors'] as List?)
-        ?.map((color) => ColorOption.fromJson(color))
-        .toList() ?? [];
+    var colorsList =
+        (json['product_colors'] as List?)
+            ?.map((color) => ColorOption.fromJson(color))
+            .toList() ??
+        [];
 
-    var tagList = (json['tag_list'] as List?)?.map((tag) => tag.toString()).toList() ?? [];
+    var tagList =
+        (json['tag_list'] as List?)?.map((tag) => tag.toString()).toList() ??
+        [];
 
     return ContentModel(
       id: json['id'].toString(),
@@ -57,8 +61,8 @@ class ContentModel {
       productLink: json['product_link'] ?? '',
       websiteLink: json['website_link'] ?? '',
       description: json['description'] ?? '',
-      category: json['category'] ?? '',
-      productType: json['product_type'] ?? '',
+      category: (json['category']?.toString().trim().isEmpty ?? true) ? '-' : json['category'],
+      productType: (json['product_type']?.toString().trim().isEmpty ?? true) ? '-' : json['product_type'],
       tagList: tagList,
       createdAt: json['created_at'] ?? '',
       updatedAt: json['updated_at'] ?? '',
@@ -106,10 +110,6 @@ class ColorOption {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'hex_value': hexValue,
-      'colour_name': colorName,
-    };
+    return {'hex_value': hexValue, 'colour_name': colorName};
   }
-  
 }

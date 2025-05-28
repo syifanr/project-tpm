@@ -1,84 +1,135 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'loginPage.dart'; 
+import 'package:hive/hive.dart';
 import '../utils/encryption.dart';
+import 'loginPage.dart';
 
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
+
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  RegisterPage({super.key});
+  String? usernameError;
+  String? passwordError;
+  String? generalError; // for username already registered
+  bool _obscurePassword = true;
 
-  void _register(BuildContext context) async {
-  String username = _usernameController.text;
-  String password = _passwordController.text;
-
-  if (username.isNotEmpty && password.isNotEmpty) {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    // Hash password sebelum disimpan
-    String hashedPassword = hashPassword(password);
-
-    await prefs.setString('password_$username', hashedPassword);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Registrasi Berhasil!')),
-    );
-    Navigator.pop(context);
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Silakan isi Username dan Password')),
-    );
+  bool isPasswordValid(String password) {
+    final hasLetters = password.contains(RegExp(r'[A-Za-z]'));
+    final hasDigits = password.contains(RegExp(r'\d'));
+    return hasLetters && hasDigits;
   }
-}
+
+  void _register() async {
+    String username = _usernameController.text.trim();
+    String password = _passwordController.text;
+
+    setState(() {
+      usernameError = null;
+      passwordError = null;
+      generalError = null;
+    });
+
+    bool valid = true;
+
+    if (username.isEmpty) {
+      usernameError = "Username cannot be empty.";
+      valid = false;
+    } else if (username.length < 5) {
+      usernameError = "Username must be at least 5 characters.";
+      valid = false;
+    }
+
+    if (password.isEmpty) {
+      passwordError = "Password cannot be empty.";
+      valid = false;
+    } else if (password.length < 5) {
+      passwordError = "Password must be at least 5 characters.";
+      valid = false;
+    } else if (!isPasswordValid(password)) {
+      passwordError = "Password must contain both letters and numbers.";
+      valid = false;
+    }
+
+    setState(() {}); // refresh UI to show errors
+
+    if (!valid) return;
+
+    var box = Hive.box('users');
+    if (box.containsKey(username)) {
+      setState(() {
+        generalError = "Username is already registered.";
+      });
+      return;
+    }
+
+    await box.put(username, hashPassword(password));
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('password_$username', hashPassword(password));
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Registration successful!")));
+    Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = const Color.fromARGB(255, 230, 145, 216);
+    final Color pinkColor = const Color.fromARGB(221, 246, 74, 148);
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [primaryColor, primaryColor],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            colors: [pinkColor.withOpacity(0.9), pinkColor],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
         child: Center(
           child: SingleChildScrollView(
             child: Card(
-              margin: EdgeInsets.symmetric(horizontal: 24),
+              margin: const EdgeInsets.symmetric(horizontal: 24),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
               elevation: 12,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 32,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    Icon(Icons.person_add_alt_1, size: 60, color: pinkColor),
+                    const SizedBox(height: 12),
                     Text(
-                      'Create Account',
+                      'Create New Account',
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: 26,
                         fontWeight: FontWeight.bold,
-                        color: primaryColor,
+                        color: pinkColor,
                       ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     Text(
-                      'Daftar untuk memulai',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[700],
-                      ),
+                      'Register your account to access Makeup Shop',
+                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                     ),
-                    SizedBox(height: 30),
+                    const SizedBox(height: 30),
                     TextField(
                       controller: _usernameController,
                       decoration: InputDecoration(
                         labelText: 'Username',
-                        prefixIcon: Icon(Icons.person),
+                        errorText: usernameError,
+                        prefixIcon: const Icon(Icons.person),
                         filled: true,
                         fillColor: Colors.grey[100],
                         border: OutlineInputBorder(
@@ -87,13 +138,26 @@ class RegisterPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     TextField(
                       controller: _passwordController,
-                      obscureText: true,
+                      obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        prefixIcon: Icon(Icons.lock),
+                        errorText: passwordError,
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
                         filled: true,
                         fillColor: Colors.grey[100],
                         border: OutlineInputBorder(
@@ -102,43 +166,57 @@ class RegisterPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(height: 30),
+
+                    if (generalError != null) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        generalError!,
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 30),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () => _register(context),
+                        onPressed: _register,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          padding: EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: pinkColor,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: Text(
+                        child: const Text(
                           'Register',
-                          style: TextStyle(fontSize: 18),
+                          style: TextStyle(fontSize: 18, color: Colors.white),
                         ),
                       ),
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Sudah punya akun? ',
+                          'Already have an account? ',
                           style: TextStyle(color: Colors.grey[700]),
                         ),
                         GestureDetector(
                           onTap: () {
                             Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(builder: (context) => LoginPage()),
+                              MaterialPageRoute(
+                                builder: (context) => const LoginPage(),
+                              ),
                             );
                           },
                           child: Text(
-                            'Klik di sini',
+                            'Login',
                             style: TextStyle(
-                              color: primaryColor,
+                              color: pinkColor,
                               fontWeight: FontWeight.bold,
                               decoration: TextDecoration.underline,
                             ),
