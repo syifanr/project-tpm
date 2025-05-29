@@ -58,7 +58,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final prefs = await SharedPreferences.getInstance();
     final loggedIn =
         prefs.getBool('is_logged_in') ??
-        false; // ✅ disamakan dengan loginPage.dart
+        false; 
 
     if (loggedIn) {
       Navigator.pushReplacement(

@@ -6,10 +6,18 @@ plugins {
 }
 
 android {
-    namespace = "com.example.tokomakeup"
+    namespace = "com.example.tokomakeup" 
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
     ndkVersion = "27.0.12077973"
+
+       defaultConfig {
+        applicationId = "com.example.tokomakeup"
+        minSdk = 21
+        targetSdk = 33
+        versionCode = 1
+        versionName = "1.0"
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -38,6 +46,7 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+   
 }
 
 flutter {

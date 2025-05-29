@@ -8,6 +8,8 @@ import 'package:tokomakeup/pages/listPage.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
+
 
 class CheckoutPage extends StatefulWidget {
   final String selectedCurrency;
@@ -30,6 +32,44 @@ class _CheckoutPageState extends State<CheckoutPage> {
     'USD': 1.1,
     'IDR': 17000.0,
   };
+
+Widget buildTimeConversionWidget() {
+  if (!isLocationConfirmed || selectedPaymentMethod.isEmpty) {
+    return const SizedBox.shrink(); // Tidak ditampilkan jika belum siap
+  }
+
+  final estimatedArrival = DateTime.now().toUtc().add(const Duration(days: 2));
+  final times = {
+    'WIB (UTC+7)': estimatedArrival.add(const Duration(hours: 7)),
+    'WITA (UTC+8)': estimatedArrival.add(const Duration(hours: 8)),
+    'WIT (UTC+9)': estimatedArrival.add(const Duration(hours: 9)),
+    'London (UTC+1 DST)': estimatedArrival.add(const Duration(hours: 1)),
+  };
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const SizedBox(height: 32),
+      const Text(
+        'Estimated Delivery Time in Various Timezones:',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.pinkAccent,
+        ),
+      ),
+      const SizedBox(height: 10),
+      ...times.entries.map((entry) {
+        return Text(
+          '${entry.key}: ${DateFormat('EEEE, dd MMM yyyy – HH:mm').format(entry.value)}',
+          style: const TextStyle(fontSize: 14, color: Colors.black87),
+        );
+      }),
+    ],
+  );
+}
+
+
 
   final List<String> paymentMethods = ['Mandiri', 'BCA', 'Gopay', 'OVO'];
 
@@ -258,7 +298,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       ),
                     ),
                   );
-                }).toList(),
+                }),
 
                 const SizedBox(height: 12),
                 Row(
@@ -417,24 +457,24 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   height: 48,
                   child: ElevatedButton(
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                      backgroundColor: WidgetStateProperty.resolveWith<Color>(
                         (states) {
-                          if (states.contains(MaterialState.disabled)) {
+                          if (states.contains(WidgetState.disabled)) {
                             return Colors.pink.shade200;
                           }
                           return Colors.pinkAccent;
                         },
                       ),
-                      shape: MaterialStateProperty.all(
+                      shape: WidgetStateProperty.all(
                         RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      elevation: MaterialStateProperty.resolveWith<double>(
+                      elevation: WidgetStateProperty.resolveWith<double>(
                         (states) =>
-                            states.contains(MaterialState.disabled) ? 0 : 6,
+                            states.contains(WidgetState.disabled) ? 0 : 6,
                       ),
-                      shadowColor: MaterialStateProperty.all(
+                      shadowColor: WidgetStateProperty.all(
                         Colors.pinkAccent.shade200,
                       ),
                     ),
@@ -455,6 +495,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     ),
                   ),
                 ),
+                buildTimeConversionWidget(),
               ],
             ),
           ),

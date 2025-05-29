@@ -16,6 +16,8 @@ class ProfilePage extends StatelessWidget {
     },
   ];
 
+   ProfilePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,7 +62,7 @@ class ProfilePage extends StatelessWidget {
               ),
               SizedBox(height: 30),
               // Looping profile cards
-              ...members.map((member) => _memberCard(member)).toList(),
+              ...members.map((member) => _memberCard(member)),
               SizedBox(height: 30),
             ],
           ),

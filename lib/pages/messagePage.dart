@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class MessagePage extends StatelessWidget {
-  const MessagePage({Key? key}) : super(key: key);
+  const MessagePage({super.key});
 
   final String jeslynComment =
       "Ini bisa diisi kesan pesan. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";

@@ -9,7 +9,7 @@ class DetailPage extends StatefulWidget {
   final String description;
   final String price;
   final String priceSign;
-  final String userId; // user id dari login
+  final String userId; 
 
   final String category;
   final String productType;
@@ -154,7 +154,7 @@ class _DetailPageState extends State<DetailPage> {
               ),
               const SizedBox(height: 10),
 
-              // Setelah Text widget.name dan SizedBox(height: 10), tambahkan:
+              
               Row(
                 children: [
                   Container(

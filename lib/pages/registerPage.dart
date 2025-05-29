@@ -17,7 +17,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   String? usernameError;
   String? passwordError;
-  String? generalError; // for username already registered
+  String? generalError;
   bool _obscurePassword = true;
 
   bool isPasswordValid(String password) {
@@ -69,14 +69,25 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    await box.put(username, hashPassword(password));
+    // Simpan password yang sudah di-hash ke Hive dan SharedPreferences
+    final hashedPassword = hashPassword(password);
+    await box.put(username, hashedPassword);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('password_$username', hashPassword(password));
+    await prefs.setString('password_$username', hashedPassword);
 
-    ScaffoldMessenger.of(
+    // Tampilkan pesan berhasil
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Registration successful!")),
+    );
+
+    // Beri delay agar SnackBar terlihat dulu, baru pindah halaman
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    // Navigasi ke halaman Login (replace halaman sekarang)
+    Navigator.pushReplacement(
       context,
-    ).showSnackBar(const SnackBar(content: Text("Registration successful!")));
-    Navigator.pop(context);
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+    );
   }
 
   @override

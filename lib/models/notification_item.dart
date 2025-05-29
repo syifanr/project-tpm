@@ -11,11 +11,11 @@ class NotificationItem extends HiveObject {
   final DateTime timestamp;
 
   @HiveField(2)
-  final String paymentMethod; // ✅ Tambahkan field ini
+  final String paymentMethod; 
 
   NotificationItem({
     required this.message,
     required this.timestamp,
-    required this.paymentMethod, // ✅ Tambahkan ini juga ke constructor
+    required this.paymentMethod, 
   });
 }

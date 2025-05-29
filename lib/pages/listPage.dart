@@ -9,6 +9,7 @@ import 'package:tokomakeup/pages/profilePage.dart';
 import 'package:tokomakeup/pages/messagePage.dart';
 import 'package:tokomakeup/pages/loginPage.dart';
 import 'package:tokomakeup/pages/notificationPage.dart';
+import 'package:tokomakeup/pages/compassPage.dart';
 import 'package:hive/hive.dart';
 
 class ListPage extends StatefulWidget {
@@ -23,7 +24,7 @@ class _ListPageState extends State<ListPage> {
   int _currentIndex = 0;
   late Box _cacheBox;
 
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _sortOption = 'Filter Default';
 
@@ -87,7 +88,7 @@ class _ListPageState extends State<ListPage> {
     _filterData();
     setState(() => _isLoading = false);
   }
-
+  
   void _filterData() {
     List<ContentModel> result =
         _searchQuery.isEmpty
@@ -162,8 +163,9 @@ class _ListPageState extends State<ListPage> {
           );
         }
         if (_error != null) return Center(child: Text('Error: $_error'));
-        if (_filteredData.isEmpty)
+        if (_filteredData.isEmpty) {
           return const Center(child: Text('Product is not found.'));
+        }
         return Column(
           children: [
             Padding(
@@ -404,6 +406,8 @@ class _ListPageState extends State<ListPage> {
         return ProfilePage();
       case 3:
         return MessagePage();
+      case 4:
+      return const CompassPage();  
       default:
         return const Center(child: Text('Halaman tidak ditemukan'));
     }
@@ -459,41 +463,26 @@ class _ListPageState extends State<ListPage> {
           _getSelectedPage(_currentIndex),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        backgroundColor: const Color(
-          0xFFFFE4EC,
-        ), // warna default, tidak dipakai jika shifting
-        selectedItemColor: Colors.pinkAccent,
-        unselectedItemColor: Colors.pink.shade200,
-        type:
-            BottomNavigationBarType
-                .shifting, // GANTI agar hanya aktif yang ada label
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'List',
-            backgroundColor: Color(0xFFFFE4EC), // WAJIB untuk shifting
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_basket),
-            label:
-                'Cart', // Kosongkan label jika ingin tak muncul saat aktif pun
-            backgroundColor: Color(0xFFFFE4EC),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-            backgroundColor: Color(0xFFFFE4EC),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.message),
-            label: 'Messages',
-            backgroundColor: Color(0xFFFFE4EC),
-          ),
-        ],
-      ),
+           bottomNavigationBar: BottomNavigationBar(
+  currentIndex: _currentIndex,
+  onTap: (index) {
+    print('Tapped index: $index');
+    setState(() => _currentIndex = index);
+  },
+  backgroundColor: const Color(0xFFFFE4EC),
+  selectedItemColor: Colors.pinkAccent,
+  unselectedItemColor: Colors.pink.shade200,
+  type: BottomNavigationBarType.fixed,  
+  items: const [
+    BottomNavigationBarItem(icon: Icon(Icons.list), label: 'List', backgroundColor: Color(0xFFFFE4EC)),
+    BottomNavigationBarItem(icon: Icon(Icons.shopping_basket), label: 'Cart', backgroundColor: Color(0xFFFFE4EC)),
+    BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile', backgroundColor: Color(0xFFFFE4EC)),
+    BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages', backgroundColor: Color(0xFFFFE4EC)),
+    BottomNavigationBarItem(icon: Icon(Icons.navigation), label: 'Compass', backgroundColor: Color(0xFFFFE4EC)),
+  ],
+),
+
+
     );
   }
 
