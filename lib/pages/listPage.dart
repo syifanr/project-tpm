@@ -88,7 +88,7 @@ class _ListPageState extends State<ListPage> {
     _filterData();
     setState(() => _isLoading = false);
   }
-  
+
   void _filterData() {
     List<ContentModel> result =
         _searchQuery.isEmpty
@@ -407,7 +407,7 @@ class _ListPageState extends State<ListPage> {
       case 3:
         return MessagePage();
       case 4:
-      return const CompassPage();  
+        return const CompassPage();
       default:
         return const Center(child: Text('Halaman tidak ditemukan'));
     }
@@ -463,26 +463,44 @@ class _ListPageState extends State<ListPage> {
           _getSelectedPage(_currentIndex),
         ],
       ),
-           bottomNavigationBar: BottomNavigationBar(
-  currentIndex: _currentIndex,
-  onTap: (index) {
-    print('Tapped index: $index');
-    setState(() => _currentIndex = index);
-  },
-  backgroundColor: const Color(0xFFFFE4EC),
-  selectedItemColor: Colors.pinkAccent,
-  unselectedItemColor: Colors.pink.shade200,
-  type: BottomNavigationBarType.fixed,  
-  items: const [
-    BottomNavigationBarItem(icon: Icon(Icons.list), label: 'List', backgroundColor: Color(0xFFFFE4EC)),
-    BottomNavigationBarItem(icon: Icon(Icons.shopping_basket), label: 'Cart', backgroundColor: Color(0xFFFFE4EC)),
-    BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile', backgroundColor: Color(0xFFFFE4EC)),
-    BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages', backgroundColor: Color(0xFFFFE4EC)),
-    BottomNavigationBarItem(icon: Icon(Icons.navigation), label: 'Compass', backgroundColor: Color(0xFFFFE4EC)),
-  ],
-),
-
-
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          print('Tapped index: $index');
+          setState(() => _currentIndex = index);
+        },
+        backgroundColor: const Color(0xFFFFE4EC),
+        selectedItemColor: Colors.pinkAccent,
+        unselectedItemColor: Colors.pink.shade200,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: 'List',
+            backgroundColor: Color(0xFFFFE4EC),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_basket),
+            label: 'Cart',
+            backgroundColor: Color(0xFFFFE4EC),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+            backgroundColor: Color(0xFFFFE4EC),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.message),
+            label: 'Message',
+            backgroundColor: Color(0xFFFFE4EC),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.explore),
+            label: 'Compass',
+            backgroundColor: Color(0xFFFFE4EC),
+          ),
+        ],
+      ),
     );
   }
 
