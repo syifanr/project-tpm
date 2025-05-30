@@ -286,114 +286,94 @@ class _ListPageState extends State<ListPage> {
                       );
                     },
                     child: Card(
-                      elevation: 6,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      shadowColor: Colors.pink.shade100,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(16),
-                            ),
-                            child: Image.network(
-                              item.imageUrl,
-                              height: 150,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder:
-                                  (context, error, stackTrace) => const Icon(
-                                    Icons.image_not_supported,
-                                    size: 80,
-                                    color: Colors.grey,
-                                  ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
-                            child: Text(
-                              item.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Colors.black87,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 2,
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.category,
-                                  size: 16,
-                                  color: Colors.pinkAccent,
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    item.category ?? '-',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[700],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 2,
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.style,
-                                  size: 16,
-                                  color: Colors.pinkAccent,
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    item.productType ?? '-',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[700],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
-                            child: Text(
-                              "€${item.price}",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.pink,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+  elevation: 6,
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(16),
+  ),
+  shadowColor: Colors.pink.shade100,
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        child: Image.network(
+          item.imageUrl,
+          height: 110, // Lebih kecil agar cukup ruang
+          width: double.infinity,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => const Icon(
+            Icons.image_not_supported,
+            size: 80,
+            color: Colors.grey,
+          ),
+        ),
+      ),
+      Expanded(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Flexible(
+                child: Text(
+                  item.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.black87,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.category, size: 14, color: Colors.pinkAccent),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      item.category ?? '-',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  const Icon(Icons.style, size: 14, color: Colors.pinkAccent),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      item.productType ?? '-',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "€${item.price}",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.pink,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ],
+  ),
+),
+
                   );
                 },
               ),
