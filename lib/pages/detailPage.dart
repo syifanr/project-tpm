@@ -67,7 +67,7 @@ class _DetailPageState extends State<DetailPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Produk "${widget.name}" ditambahkan ke keranjang!'),
+        content: Text('Product "${widget.name}" added to cart!'),
         backgroundColor: const Color.fromARGB(221, 246, 74, 148),
       ),
     );

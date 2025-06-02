@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:tokomakeup/pages/loginPage.dart';
 import 'package:tokomakeup/pages/listPage.dart';
 import 'package:tokomakeup/models/cart_item.dart';
 import 'package:tokomakeup/models/notification_item.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Inisialisasi Hive
   await Hive.initFlutter();
-
-  // Daftarkan adapter
   Hive.registerAdapter(CartItemAdapter());
   Hive.registerAdapter(NotificationItemAdapter());
 
@@ -23,7 +26,25 @@ void main() async {
   await Hive.openBox('makeup_cache');
   await Hive.openBox<NotificationItem>('notifications');
 
+  // Inisialisasi Notifikasi Lokal
+  const AndroidInitializationSettings androidInitSettings =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const InitializationSettings initSettings =
+      InitializationSettings(android: androidInitSettings);
+
+  await flutterLocalNotificationsPlugin.initialize(initSettings);
+
+  // Request permission (Android 13+)
+  await requestNotificationPermission();
+
   runApp(const MyApp());
+}
+
+Future<void> requestNotificationPermission() async {
+  if (await Permission.notification.isDenied) {
+    await Permission.notification.request();
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -56,9 +77,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> checkLogin() async {
     final prefs = await SharedPreferences.getInstance();
-    final loggedIn =
-        prefs.getBool('is_logged_in') ??
-        false; 
+    final loggedIn = prefs.getBool('is_logged_in') ?? false;
 
     if (loggedIn) {
       Navigator.pushReplacement(

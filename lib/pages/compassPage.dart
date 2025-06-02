@@ -82,7 +82,7 @@ class _CompassPageState extends State<CompassPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Kompas Arah Toko Makeup"),
+        title: const Text("Compass to Nearest Makeup Store"),
         backgroundColor: Colors.pinkAccent,
       ),
       body: Center(
@@ -92,10 +92,10 @@ class _CompassPageState extends State<CompassPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Posisi Anda: ${_currentPosition!.latitude.toStringAsFixed(5)}, ${_currentPosition!.longitude.toStringAsFixed(5)}',
+                    'Your Position: ${_currentPosition!.latitude.toStringAsFixed(5)}, ${_currentPosition!.longitude.toStringAsFixed(5)}',
                   ),
                   const SizedBox(height: 16),
-                  Text('Arah ke toko: ${bearing!.toStringAsFixed(1)}°'),
+                  Text('Direction to Store: ${bearing!.toStringAsFixed(1)}°'),
                   const SizedBox(height: 16),
                   Transform.rotate(
                     angle: (direction ?? 0) * (math.pi / 180) * -1,
@@ -107,7 +107,7 @@ class _CompassPageState extends State<CompassPage> {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    "Panah menunjuk ke arah toko makeup terdekat",
+                    "Arrow points to the nearest makeup store",
                     textAlign: TextAlign.center,
                   ),
                 ],

@@ -23,7 +23,7 @@ class NotificationPage extends StatelessWidget {
       ),
       body:
           notifs.isEmpty
-              ? const Center(child: Text('Belum ada notifikasi.'))
+              ? const Center(child: Text('No notifications yet.'))
               : ListView.builder(
                 itemCount: notifs.length,
                 itemBuilder: (context, index) {
@@ -75,7 +75,7 @@ class NotificationPage extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  "Metode: ${notif.paymentMethod.isNotEmpty ? notif.paymentMethod : '-'}",
+                                  "Method: ${notif.paymentMethod.isNotEmpty ? notif.paymentMethod : '-'}",
                                   style: const TextStyle(
                                     color: Colors.pinkAccent,
                                   ),

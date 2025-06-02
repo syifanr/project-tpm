@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tokomakeup/models/cart_item.dart';
 import 'package:tokomakeup/models/notification_item.dart';
 import 'package:tokomakeup/pages/listPage.dart';
+import 'package:tokomakeup/models/notification_helper.dart';
+
 
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -171,47 +173,48 @@ Widget buildTimeConversionWidget() {
     return totalEUR * conversionRates[widget.selectedCurrency]!;
   }
 
-  void performCheckout(List<String> keys, double total) async {
-    final notifBox = Hive.box<NotificationItem>('notifications');
-    final symbol =
-        widget.selectedCurrency == 'IDR'
-            ? 'Rp'
-            : widget.selectedCurrency == 'USD'
-            ? '\$'
-            : '€';
-    final message =
-        "You have successfully checked out with a total of $symbol${total.toStringAsFixed(widget.selectedCurrency == 'IDR' ? 0 : 2)}"
-        "\nShipping Location: ${pinnedLocation.latitude.toStringAsFixed(5)}, ${pinnedLocation.longitude.toStringAsFixed(5)}";
+  Future<String> performCheckout(List<String> keys, double total) async {
+  final notifBox = Hive.box<NotificationItem>('notifications');
+  final symbol =
+      widget.selectedCurrency == 'IDR'
+          ? 'Rp'
+          : widget.selectedCurrency == 'USD'
+              ? '\$'
+              : '€';
+  final message =
+      "You have successfully checked out with a total of $symbol${total.toStringAsFixed(widget.selectedCurrency == 'IDR' ? 0 : 2)}"
+      "\nShipping Location: ${pinnedLocation.latitude.toStringAsFixed(5)}, ${pinnedLocation.longitude.toStringAsFixed(5)}";
 
-    notifBox.add(
-      NotificationItem(
-        message: message,
-        timestamp: DateTime.now(),
-        paymentMethod: selectedPaymentMethod,
+  notifBox.add(
+    NotificationItem(
+      message: message,
+      timestamp: DateTime.now(),
+      paymentMethod: selectedPaymentMethod,
+    ),
+  );
+
+  for (var key in keys) {
+    cartBox.delete(key);
+  }
+
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Payment Successful! Check notification for payment recap.'),
+        backgroundColor: Colors.green,
       ),
     );
 
-    for (var key in keys) {
-      cartBox.delete(key);
-    }
-
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Payment Successful! Check notification for payment recap.',
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const ListPage()),
-        (route) => false,
-      );
-    }
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const ListPage()),
+      (route) => false,
+    );
   }
+
+  return message;
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -478,13 +481,18 @@ Widget buildTimeConversionWidget() {
                         Colors.pinkAccent.shade200,
                       ),
                     ),
-                    onPressed:
-                        (selectedPaymentMethod.isEmpty || !isLocationConfirmed)
-                            ? null
-                            : () => performCheckout(
-                              cartKeys.map((e) => e.toString()).toList(),
-                              totalConverted,
-                            ),
+                    onPressed: (selectedPaymentMethod.isEmpty || !isLocationConfirmed)
+    ? null
+    : () async {
+        final checkoutMessage = await performCheckout(
+          cartKeys.map((e) => e.toString()).toList(),
+          totalConverted,
+        );
+        await showNotification(
+          title: 'Checkout Succesful',
+          body: checkoutMessage,
+        );
+      },
                     child: const Text(
                       'Checkout',
                       style: TextStyle(

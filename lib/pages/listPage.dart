@@ -168,88 +168,88 @@ class _ListPageState extends State<ListPage> {
         }
         return Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Search product...',
-                        prefixIcon: Icon(Icons.search, color: _primaryPink),
-                        filled: true,
-                        fillColor: _lightGray,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 14,
-                          horizontal: 16,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: _primaryPink.withOpacity(0.3),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: _primaryPink),
-                        ),
-                      ),
-                      style: TextStyle(color: _darkText),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    flex: 2,
-                    child: DropdownButtonFormField<String>(
-                      value: _sortOption,
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _sortOption = value;
-                            _filterData();
-                          });
-                        }
-                      },
-                      items:
-                          [
-                                'Filter Default',
-                                'Price: Low to High',
-                                'Price: High to Low',
-                                'Name: A-Z',
-                                'Name: Z-A',
-                              ]
-                              .map(
-                                (label) => DropdownMenuItem(
-                                  value: label,
-                                  child: Text(label),
-                                ),
-                              )
-                              .toList(),
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
-                        filled: true,
-                        fillColor: _lightGray,
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: _primaryPink.withOpacity(0.3),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: _primaryPink),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+            // Bagian Row di _getSelectedPage case 0:
+Padding(
+  padding: const EdgeInsets.all(12.0),
+  child: Row(
+    children: [
+      Expanded(
+        flex: 3,
+        child: TextField(
+          controller: _searchController,
+          decoration: InputDecoration(
+            hintText: 'Search product...',
+            prefixIcon: Icon(Icons.search, color: _primaryPink),
+            filled: true,
+            fillColor: _lightGray,
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 14,
+              horizontal: 16,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: _primaryPink.withOpacity(0.3),
               ),
             ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: _primaryPink),
+            ),
+          ),
+          style: TextStyle(color: _darkText),
+        ),
+      ),
+      const SizedBox(width: 10),
+      Expanded(
+        flex: 2,
+        child: DropdownButtonFormField<String>(
+          isExpanded: true, // penting supaya dropdown tidak overflow
+          value: _sortOption,
+          onChanged: (value) {
+            if (value != null) {
+              setState(() {
+                _sortOption = value;
+                _filterData();
+              });
+            }
+          },
+          items: [
+            'Filter Default',
+            'Price: Low to High',
+            'Price: High to Low',
+            'Name: A-Z',
+            'Name: Z-A',
+          ].map(
+            (label) => DropdownMenuItem(
+              value: label,
+              child: Text(label, overflow: TextOverflow.ellipsis),
+            ),
+          ).toList(),
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
+            filled: true,
+            fillColor: _lightGray,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: _primaryPink.withOpacity(0.3),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: _primaryPink),
+            ),
+          ),
+        ),
+      ),
+    ],
+  ),
+),
+
             Expanded(
               child: GridView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -286,94 +286,113 @@ class _ListPageState extends State<ListPage> {
                       );
                     },
                     child: Card(
-  elevation: 6,
-  shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(16),
-  ),
-  shadowColor: Colors.pink.shade100,
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-        child: Image.network(
-          item.imageUrl,
-          height: 110, // Lebih kecil agar cukup ruang
-          width: double.infinity,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => const Icon(
-            Icons.image_not_supported,
-            size: 80,
-            color: Colors.grey,
-          ),
-        ),
-      ),
-      Expanded(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Flexible(
-                child: Text(
-                  item.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  const Icon(Icons.category, size: 14, color: Colors.pinkAccent),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      item.category ?? '-',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Row(
-                children: [
-                  const Icon(Icons.style, size: 14, color: Colors.pinkAccent),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      item.productType ?? '-',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                "€${item.price}",
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.pink,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ],
-  ),
-),
+                      elevation: 6,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      shadowColor: Colors.pink.shade100,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(16),
+                            ),
+                            child: Image.network(
+                              item.imageUrl,
+                              height: 110, // Lebih kecil agar cukup ruang
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (context, error, stackTrace) => const Icon(
+                                    Icons.image_not_supported,
+                                    size: 80,
+                                    color: Colors.grey,
+                                  ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      item.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: Colors.black87,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.category,
+                                        size: 14,
+                                        color: Colors.pinkAccent,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Flexible(
+                                        child: Text(
+                                          item.category ?? '-',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[700],
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
 
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.style,
+                                        size: 14,
+                                        color: Colors.pinkAccent,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Flexible(
+                                        child: Text(
+                                          item.productType ?? '-',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[700],
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "€${item.price}",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.pink,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 },
               ),
@@ -389,7 +408,7 @@ class _ListPageState extends State<ListPage> {
       case 4:
         return const CompassPage();
       default:
-        return const Center(child: Text('Halaman tidak ditemukan'));
+        return const Center(child: Text('Page Not Found'));
     }
   }
 
